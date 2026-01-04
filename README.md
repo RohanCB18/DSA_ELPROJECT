@@ -166,7 +166,7 @@ cd backend
 # S2: 0 0
 # S3: 0 0
 # S4: 0 0
-# S5: 0 0
+# S5: 0 15
 ```
 
 ## 🧪 DSA Concepts Demonstrated
