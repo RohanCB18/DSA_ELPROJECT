@@ -100,7 +100,7 @@ export default function OperatorPage() {
                                                     onChange={(e) => handleChange(idx, 'waiting', e.target.value)}
                                                     disabled={isSimulating}
                                                     placeholder="Wait"
-                                                    className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 transition-all text-center"
+                                                    className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 transition-all text-center text-gray-900"
                                                 />
                                             </div>
                                             <div className="relative">
@@ -111,7 +111,7 @@ export default function OperatorPage() {
                                                     onChange={(e) => handleChange(idx, 'drop', e.target.value)}
                                                     disabled={isSimulating}
                                                     placeholder="Drop"
-                                                    className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 transition-all text-center"
+                                                    className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 transition-all text-center text-gray-900"
                                                 />
                                             </div>
                                         </div>
@@ -120,29 +120,26 @@ export default function OperatorPage() {
                             </div>
                         </div>
 
-                        <div className="p-3 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
-                            {!isSimulating ? (
-                                <button
-                                    onClick={handleSimulate}
-                                    disabled={!isValidInput}
-                                    className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all transform active:scale-95
-                                        ${isValidInput
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
-                                >
-                                    <Play className="w-4 h-4 fill-current" />
-                                    Start Simulation
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={resetSimulation}
-                                    className="w-full flex items-center justify-center gap-2 py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
-                                >
-                                    <RotateCcw className="w-4 h-4" />
-                                    Reset System
-                                </button>
-                            )}
+                        <div className="p-3 border-t border-gray-100 bg-gray-50/50 rounded-b-xl space-y-2">
+                            <button
+                                onClick={handleSimulate}
+                                disabled={!isValidInput || isSimulating}
+                                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all transform active:scale-95
+                                    ${isValidInput && !isSimulating
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                <Play className="w-4 h-4 fill-current" />
+                                {isSimulating ? 'Simulating...' : 'Start Simulation'}
+                            </button>
+                            <button
+                                onClick={resetSimulation}
+                                className="w-full flex items-center justify-center gap-2 py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                Reset
+                            </button>
                         </div>
                     </section>
 
