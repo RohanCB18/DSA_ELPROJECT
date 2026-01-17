@@ -44,9 +44,8 @@ export default function BusLayer({ buses, activeRoutes }) {
 
             {Object.entries(buses).map(([busId, busData]) => {
                 const stationId = busData.location;
-                // Since this uses the same ID space as stations, coordinate lookup will work if strictly at stations
-                // Note: Real simulation might interpolate. Assuming busData.location is a valid station key.
-                const coords = STATION_COORDINATES[stationId];
+                // Fix key lookup: simulation uses ints (0), mapData uses strings ("S0")
+                const coords = STATION_COORDINATES[`S${stationId}`] || STATION_COORDINATES[stationId];
 
                 if (!coords) return null;
 

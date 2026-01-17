@@ -7,7 +7,7 @@
 
 #define STATIONS 6
 #define INF 9999
-#define CONGESTION_THRESHOLD 40
+#define CONGESTION_THRESHOLD 5
 #define DEMAND_FACTOR 3
 
 int graph[STATIONS][STATIONS] = {
@@ -111,9 +111,9 @@ int dijkstra(int src, int dest, int adj[STATIONS][STATIONS], int pathOut[]) {
 void start_simulation() {
     int i, j;
     int smartGraph[STATIONS][STATIONS];
-    Bus bus1 = {1, {0}, 0, 0, 0, 1};
-    Bus bus2 = {2, {0}, 0, 0, 0, 1};
-    Bus bus3 = {3, {0}, 0, 0, 0, 0};
+    Bus bus1 = {1, {0}, 0, 0, 0, 1};    // Bus 1: Scheduled (Active)
+    Bus bus2 = {2, {0}, 0, 0, 0, 0};    // Bus 2: Smart (INACTIVE for Single Bus Mode)
+    Bus bus3 = {3, {0}, 0, 0, 0, 0};    // Bus 3: Relief (Started inactive)
     int step = 0;
     int maxSteps = 30;
     int b1_done, b2_done, b3_done;
@@ -201,17 +201,30 @@ void start_simulation() {
             sid = bus1.route[bus1.currentIndex];
             s = &stations[sid];
 
-            if (bus1.currentIndex == 0) {
+            // 1. DROP Logic
+            int flow_drop = 0;
+            if (bus1.passengers > 0) {
+                if (bus1.currentIndex == bus1.routeLength - 1) {
+                    flow_drop = bus1.passengers; // Terminal: Everyone out
+                } else if (s->drop > 0) {
+                    flow_drop = (s->drop > bus1.passengers) ? bus1.passengers : s->drop;
+                }
+                bus1.passengers -= flow_drop;
+                if(s->drop > 0) s->drop -= flow_drop;
+            }
+
+            // 2. PICKUP Logic (Only if not terminal)
+            int flow_board = 0;
+            if (bus1.currentIndex < bus1.routeLength - 1) {
                 capacity_left = BUS_CAPACITY - bus1.passengers;
-                boarded = (s->waiting < capacity_left) ? s->waiting : capacity_left;
-                bus1.passengers += boarded;
-                s->waiting -= boarded;
+                if (capacity_left > 0 && s->waiting > 0) {
+                    flow_board = (s->waiting < capacity_left) ? s->waiting : capacity_left;
+                    bus1.passengers += flow_board;
+                    s->waiting -= flow_board;
+                }
             }
 
-            if (bus1.currentIndex == bus1.routeLength - 1) {
-                bus1.passengers = 0;
-            }
-
+            // Log event after flow changes
             emit_event(step, bus1.busId, s->name, s->waiting, bus1.passengers);
             bus1.currentIndex++;
         }
