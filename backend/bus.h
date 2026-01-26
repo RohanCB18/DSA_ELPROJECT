@@ -10,7 +10,7 @@ typedef struct {
     int routeLength;
     int currentIndex;
     int passengers;
-    int active; // 0 = Inactive, 1 = Active
+    int active; 
 } Bus;
 
 #endif

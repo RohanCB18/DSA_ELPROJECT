@@ -8,7 +8,7 @@ import { useSimulation } from '@/hooks/useSimulation';
 import LinkedList from '@/components/dsa/LinkedList';
 import HashMap from '@/components/dsa/HashMap';
 import StationQueue from '@/components/dsa/StationQueue';
-import PriorityQueue from '@/components/dsa/PriorityQueue';
+import PriorityQueue from '@/components/dsa/heap';
 import {
     Play,
     RotateCcw,
@@ -189,18 +189,10 @@ export default function OperatorPage() {
                     <BusLayer buses={buses} activeRoutes={[]} />
                     {/* Note: activeRoutes highlighting disabled for step-mode to keep it clean, or can re-enable */}
 
-                    <div className="absolute bottom-4 right-4 z-10 bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-sm border border-gray-200/50 text-[10px] space-y-1.5 min-w-[100px]">
+                    <div className="absolute bottom-4 right-4 z-10 bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-sm border border-gray-200/50 text-[10px]">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span className="text-gray-600">Bus 1 (Regular)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span className="text-gray-600">Bus 2 (Smart)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                            <span className="text-gray-600 font-medium">Bus 3 (Relief)</span>
+                            <span className="text-gray-600">Bus 1 (Active)</span>
                         </div>
                     </div>
                 </div>

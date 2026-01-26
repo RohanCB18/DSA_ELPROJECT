@@ -4,8 +4,8 @@
 typedef struct {
     int id;
     char name[10];
-    int waiting;   // people standing at station
-    int drop;      // people to get down here
+    int waiting;   
+    int drop;     
 } Station;
 
 #endif

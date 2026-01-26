@@ -4,7 +4,7 @@ import { ArrowRight, Circle, CheckCircle2 } from 'lucide-react';
 const StationQueue = ({ busId, route = [], currentIdx }) => {
     const scrollRef = useRef(null);
 
-    // Auto-scroll to active item
+
     useEffect(() => {
         if (scrollRef.current && currentIdx >= 0) {
             const activeEl = scrollRef.current.children[currentIdx];

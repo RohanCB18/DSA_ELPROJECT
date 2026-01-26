@@ -1,11 +1,7 @@
 import React from 'react';
 
 const PriorityQueue = ({ heap = [] }) => {
-    // heap is array of station objects or IDs, sorted by congestion
-    // Backend gives us a heap, but in frontend we receives updates. 
-    // We'll visualize it as a binary tree or just a list for simplicity in limited space, 
-    // but the user asked for DS visuals. A tree structure is hard in small space.
-    // Let's do a sorted array visualization which represents the heap array storage.
+
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 h-full">
