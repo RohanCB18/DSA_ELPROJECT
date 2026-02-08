@@ -8,14 +8,13 @@
 #define STATIONS 6
 #define INF 9999
 #define CONGESTION_THRESHOLD 5
-#define DEMAND_FACTOR 3
 
 int graph[STATIONS][STATIONS] = {
     {0, 15, 25, 0, 0, 0},
     {0, 0, 20, 20, 0, 0},
     {0, 0, 0, 0, 20, 0},
     {0, 0, 0, 0, 15, 20},
-    {0, 0, 0, 15, 0, 20},
+    {0, 0, 0, 15, 0, 0},
     {0, 0, 0, 0, 0, 0}
 };
 
@@ -93,7 +92,7 @@ void start_simulation() {
 
     printf("\n--- SIMULATION START ---\n");
     printf("Bus 1 Route (Scheduled): ");
-    for(i=0; i<bus1.routeLength; i++) printf("S%d ", bus1.route[i]);
+    for(i=0; i<bus1.routeLength; i++) printf("S%d ", bus1.route[i]); 
     printf("(Len: %d)\n", bus1.routeLength);
 
     if(bus1.routeLength == 0) { 
