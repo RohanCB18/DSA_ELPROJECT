@@ -2,7 +2,7 @@
 #define BUS_HEADER_H
 
 #define MAX_ROUTE 10
-#define BUS_CAPACITY 10
+#define BUS_CAPACITY 15
 
 typedef struct {
     int busId;
@@ -10,7 +10,7 @@ typedef struct {
     int routeLength;
     int currentIndex;
     int passengers;
-    int active; 
+    int active;
 } Bus;
 
 #endif

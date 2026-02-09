@@ -146,7 +146,7 @@ export default function OperatorPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-semibold text-gray-700">Passenger List (Linked List)</h3>
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Bus Capacity: 10</span>
+                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Bus Capacity: 15</span>
                             </div>
                             <LinkedList
                                 key={1}

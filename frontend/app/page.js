@@ -15,16 +15,6 @@ export default function HomePage() {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      title: 'Congestion Handling',
-      description: 'Passenger demand analysis and dynamic deployment of a relief bus using priority queues.',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      color: 'from-green-500 to-green-600'
-    },
-    {
       title: 'Real-Time Simulation',
       description: 'Step-by-step bus movement and state updates driven entirely by backend-generated events.',
       icon: (
@@ -81,14 +71,6 @@ export default function HomePage() {
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-              </Link>
-
-              <Link
-                href="/dsa-mapping"
-                className="inline-flex items-center bg-white text-gray-700 px-5 py-2 rounded-lg
-                           font-semibold hover:bg-gray-50 transition border-2 border-gray-200 hover:border-gray-300 text-sm"
-              >
-                Explore DSA Mapping
               </Link>
             </div>
           </div>

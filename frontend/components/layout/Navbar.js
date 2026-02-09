@@ -7,9 +7,7 @@ const Navbar = () => {
 
     const navLinks = [
         { href: '/', label: 'Home' },
-        { href: '/operator', label: 'Operator Console' },
-        { href: '/dsa-mapping', label: 'DSA Mapping' },
-        { href: '/about', label: 'About' }
+        { href: '/operator', label: 'Operator Console' }
     ];
 
     return (
