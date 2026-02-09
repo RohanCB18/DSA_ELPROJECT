@@ -2,14 +2,14 @@ import { useState, useRef, useCallback } from 'react';
 
 export function useSimulation() {
     const [buses, setBuses] = useState({});
-    const [stations, setStations] = useState([]); // Array of {id, name, waiting, drop}
-    const [heap, setHeap] = useState([]); // For Priority Queue
+    const [stations, setStations] = useState([]);
+    const [heap, setHeap] = useState([]);
     const [activeRoutes, setActiveRoutes] = useState([]);
+    const [selectedRoute, setSelectedRoute] = useState(null);
 
     const [isSimulating, setIsSimulating] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
 
-    // Playback State
     const [history, setHistory] = useState([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(-1);
 
@@ -18,7 +18,6 @@ export function useSimulation() {
     const startSimulation = async (stationsInput) => {
         resetSimulation();
         setIsSimulating(true);
-        // Initialize stations state with input
         const initialStations = stationsInput.map((s, i) => ({
             id: i,
             name: `S${i}`,
@@ -26,7 +25,7 @@ export function useSimulation() {
             drop: parseInt(s.drop)
         }));
         setStations(initialStations);
-        updateHeap(initialStations);
+        setHeapFromStations(initialStations);
 
         abortControllerRef.current = new AbortController();
 
@@ -51,7 +50,7 @@ export function useSimulation() {
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                buffer = lines.pop(); // Keep incomplete line
+                buffer = lines.pop();
                 rawLines.push(...lines.filter(l => l.trim()));
             }
 
@@ -64,23 +63,34 @@ export function useSimulation() {
     };
 
     const parseSimulationOutput = (lines, initialStations) => {
-        // We need to group lines by STEP
-        // Lines look like: EVENT STEP=0 ...
-        // We will build a 'timeline' array where each index is a step
-        // containing the state Delta or absolute state for that step.
-
         let timeline = [];
         let currentStepEvents = [];
         let lastStep = -1;
+        let routeInfo = null;
 
-        // Helper to extract step count
         const getStep = (line) => {
             const match = line.match(/STEP=(\d+)/);
             return match ? parseInt(match[1]) : -1;
         };
 
         lines.forEach(line => {
-            if (line.startsWith('EVENT')) {
+            if (line.startsWith('ROUTE_SELECTED')) {
+                const parts = {};
+                line.split(' ').slice(1).forEach(p => {
+                    const [k, v] = p.split('=');
+                    parts[k] = v;
+                });
+
+                routeInfo = {
+                    id: parseInt(parts.ROUTE_ID),
+                    name: parts.ROUTE_NAME,
+                    path: parts.PATH.split(',').map(s => parseInt(s.replace('S', ''))),
+                    score: parseInt(parts.SCORE),
+                    reason: parts.REASON
+                };
+                setSelectedRoute(routeInfo);
+            }
+            else if (line.startsWith('EVENT')) {
                 const step = getStep(line);
                 if (step !== lastStep) {
                     if (currentStepEvents.length > 0) {
@@ -91,25 +101,14 @@ export function useSimulation() {
                 }
                 currentStepEvents.push(line);
             }
-            // We can also capture ALERT lines if needed and attach to current step
-            else if (line.startsWith('ALERT')) {
-                currentStepEvents.push(line);
-            }
-            else if (line.startsWith('Route') || line.includes('Route')) {
-                currentStepEvents.push(line);
-            }
         });
 
-        // Push last batch
         if (currentStepEvents.length > 0) {
             timeline.push({ step: lastStep, events: currentStepEvents });
         }
 
         setHistory(timeline);
-        setCurrentStepIndex(-1); // Ready to start
-        // Auto-advance to step 0 immediately so user sees initial state? 
-        // Or wait for first click? User said "every click advances".
-        // Let's set index to -1, so first click does Step 0.
+        setCurrentStepIndex(-1);
     };
 
     const nextStep = () => {
@@ -125,10 +124,8 @@ export function useSimulation() {
 
         if (!stepData) return;
 
-        // Apply changes based on events in this step
         processEvents(stepData.events);
 
-        // Check if this was the last step
         if (nextIdx >= history.length - 1) {
             setIsCompleted(true);
         }
@@ -140,7 +137,6 @@ export function useSimulation() {
 
         events.forEach(line => {
             if (line.startsWith('EVENT')) {
-                // EVENT STEP=0 BUS=1 STATION=S0 DEMAND_SIGNAL=0 ONBUS=10
                 const parts = {};
                 line.split(' ').slice(1).forEach(p => {
                     const [k, v] = p.split('=');
@@ -150,80 +146,46 @@ export function useSimulation() {
                 const busId = parseInt(parts.BUS);
                 const stationName = parts.STATION;
                 const stationId = parseInt(stationName.replace('S', ''));
-                const waiting = parseInt(parts.DEMAND_SIGNAL); // This is the REMAINING waiting at station
+                const waiting = parseInt(parts.DEMAND_SIGNAL);
                 const onBus = parseInt(parts.ONBUS);
 
-                // Update Bus Location & Passengers
-                if (!newBuses[busId]) newBuses[busId] = { route: [] };
+                // Parse real passenger IDs
+                let passengerList = [];
+                if (parts.PASSENGERS) {
+                    passengerList = parts.PASSENGERS.split(',')
+                        .filter(id => id.trim() !== '')
+                        .map(id => ({ id: `P${id}`, dest: 'S5' }));
+                } else {
+                    // Fallback if empty or not present
+                    passengerList = Array(onBus).fill({ id: '?', dest: 'S5' });
+                }
 
-                // Track route history for visual
-                const currentRoute = newBuses[busId].route || [];
-                // If this station isn't last added, add it (simple dedup)
-                // Actually for queue visual, we probably want the full PLANNED route.
-                // But the backend doesn't emit full route easily in EVENT line.
-                // We'll simulate the "Queue" by showing visited stations vs upcoming (inferred possibly?)
-                // Or we can just track where it IS.
-
-                // Update Bus State
                 newBuses[busId] = {
-                    ...newBuses[busId],
                     id: busId,
                     location: stationId,
-                    passengers: Array(onBus).fill({ dest: '?' }) // We don't have individual destinations from C, just count. Mocking for visual.
+                    passengers: passengerList,
+                    routePath: selectedRoute ? selectedRoute.path : []
                 };
 
-                // Update Station Waiting Count
-                // Find station by ID and update
                 const sIdx = stationsUpdate.findIndex(s => s.id === stationId);
                 if (sIdx !== -1) {
                     stationsUpdate[sIdx] = { ...stationsUpdate[sIdx], waiting: waiting };
-                }
-
-                // Highlight route on map
-                // (Disabled for step-by-step to reduce chaos, or keep?)
-                // updateBusPosition handles highlighting in original code.
-            }
-            if (line.startsWith('Bus') && line.includes('Route')) {
-                // Capture route info if possible (e.g. "Bus 1 Route: S0 S1 ...")
-                // Parsing this allows us to populate the 'Queue' for each bus
-                const match = line.match(/Bus (\d) Route.*: (.*) \(Len/);
-                if (match) {
-                    const bId = parseInt(match[1]);
-                    const routeStr = match[2].trim(); // "S0 S1 S3..."
-                    const routeArr = routeStr.split(' ').map(s => parseInt(s.replace('S', '')));
-
-                    if (!newBuses[bId]) newBuses[bId] = {};
-                    newBuses[bId].fullRoute = routeArr;
                 }
             }
         });
 
         setBuses(newBuses);
         setStations(stationsUpdate);
-        updateHeap(stationsUpdate);
+        setHeapFromStations(stationsUpdate);
     };
 
-    const updateHeap = (currentStations) => {
-        // Simple manual heapify for visualization
-        // Sort by waiting desc
+    const setHeapFromStations = (currentStations) => {
         const sorted = [...currentStations].sort((a, b) => b.waiting - a.waiting);
         setHeap(sorted);
     };
 
-    // Helper to get bus route queue
     const getBusRoute = (busId) => {
-        // Return full route if known, or visited + current
-        return buses[busId]?.fullRoute || [];
-    };
-
-    const getCurrentStationIdx = (busId) => {
-        const loc = buses[busId]?.location;
-        const route = buses[busId]?.fullRoute || [];
-        return route.indexOf(loc);
-    };
-
-    const updateBusPosition = (busId, stationId) => {
-        // Legacy support if needed, mostly handled in processEvents now
+        return selectedRoute ? selectedRoute.path : [];
     };
 
     const resetSimulation = useCallback(() => {
@@ -237,12 +199,14 @@ export function useSimulation() {
         setIsCompleted(false);
         setActiveRoutes([]);
         setHeap([]);
+        setSelectedRoute(null);
     }, []);
 
     return {
         stations,
         buses,
         heap,
+        selectedRoute,
         isSimulating,
         isCompleted,
         currentStepIndex,
@@ -250,7 +214,6 @@ export function useSimulation() {
         startSimulation,
         nextStep,
         resetSimulation,
-        getBusRoute,
-        getCurrentStationIdx
+        getBusRoute
     };
 }

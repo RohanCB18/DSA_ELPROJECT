@@ -9,195 +9,216 @@ import LinkedList from '@/components/dsa/LinkedList';
 import HashMap from '@/components/dsa/HashMap';
 import StationQueue from '@/components/dsa/StationQueue';
 import PriorityQueue from '@/components/dsa/heap';
-import {
-    Play,
-    RotateCcw,
-    Settings2,
-    StepForward,
-    MapPin,
-    AlertTriangle
-} from 'lucide-react';
+import { Map as MapIcon, RotateCcw, Play } from 'lucide-react';
 
 export default function OperatorPage() {
-    const [stations, setStations] = useState([
-        { id: 'S0', waiting: '', drop: '' },
-        { id: 'S1', waiting: '', drop: '' },
-        { id: 'S2', waiting: '', drop: '' },
-        { id: 'S3', waiting: '', drop: '' },
-        { id: 'S4', waiting: '', drop: '' },
-        { id: 'S5', waiting: '', drop: '' },
+    const [stationsInput, setStationsInput] = useState([
+        { waiting: '', drop: '' },
+        { waiting: '', drop: '' },
+        { waiting: '', drop: '' },
+        { waiting: '', drop: '' },
+        { waiting: '', drop: '' },
+        { waiting: '', drop: '' },
     ]);
 
     const {
-        stations: simStations,
+        stations,
         buses,
         heap,
+        selectedRoute,
         isSimulating,
         isCompleted,
+        currentStepIndex,
+        totalSteps,
         startSimulation,
         nextStep,
         resetSimulation,
-        getBusRoute,
-        getCurrentStationIdx
     } = useSimulation();
 
-    const handleChange = (index, field, value) => {
-        if (!/^\d*$/.test(value)) return;
-        const updated = [...stations];
-        updated[index][field] = value;
-        setStations(updated);
+    // Helper to get current index of bus 1 for Queue Viz
+    const getBusCurrentIndex = (busId) => {
+        if (!buses[busId] || !selectedRoute) return -1;
+        return selectedRoute.path.indexOf(buses[busId].location);
     };
 
-    const isValidInput = stations.every(
-        (s) =>
-            s.waiting !== '' &&
-            s.drop !== '' &&
-            Number(s.waiting) >= 0 &&
-            Number(s.drop) >= 0
-    );
+    const handleInputChange = (index, field, value) => {
+        const newInputs = [...stationsInput];
+        newInputs[index][field] = value;
+        setStationsInput(newInputs);
+    };
 
     const handleStart = () => {
-        if (!isValidInput) return;
-        startSimulation(stations);
+        const payload = stationsInput.map(s => ({
+            waiting: s.waiting || 0,
+            drop: s.drop || 0
+        }));
+        startSimulation(payload);
     };
 
+    const handleReset = () => {
+        resetSimulation();
+        setStationsInput([
+            { waiting: '', drop: '' },
+            { waiting: '', drop: '' },
+            { waiting: '', drop: '' },
+            { waiting: '', drop: '' },
+            { waiting: '', drop: '' },
+            { waiting: '', drop: '' },
+        ]);
+    };
+
+    const isFormValid = stationsInput.every(s =>
+        s.waiting !== '' && s.drop !== '' && !isNaN(parseInt(s.waiting)) && !isNaN(parseInt(s.drop))
+    );
+
     return (
-        <main className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
             <Navbar />
 
-            <div className="flex-1 flex max-w-[1920px] mx-auto w-full px-6 py-4 gap-6 min-h-0">
+            <main className="flex-grow container mx-auto px-4 py-4 space-y-4">
 
-                {/* LEFT PANEL (60%) */}
-                <div className="w-[60%] flex flex-col gap-4 overflow-y-auto pr-2">
+                {/* 1. Top Control Panel: Inputs & Controls */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
 
-                    {/* Top Row: Config & Controls */}
-                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                <Settings2 size={16} /> Configuration
-                            </h2>
-                            <div className="flex gap-2">
-                                {!isSimulating && !isCompleted && (
-                                    <button
-                                        onClick={handleStart}
-                                        disabled={!isValidInput}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-all
-                                            ${isValidInput ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' : 'bg-gray-100 text-gray-400'}`}
-                                    >
-                                        <Play size={14} /> Start Simulation
-                                    </button>
-                                )}
-
-                                {isSimulating && !isCompleted && (
-                                    <button
-                                        onClick={nextStep}
-                                        className="px-6 py-1.5 rounded-md text-sm font-bold bg-green-600 text-white hover:bg-green-700 shadow-md flex items-center gap-2 animate-pulse"
-                                    >
-                                        <StepForward size={16} fill="currentColor" /> SIMULATE (NEXT STEP)
-                                    </button>
-                                )}
-
-                                {isCompleted && (
-                                    <div className="px-4 py-1.5 rounded-md text-sm font-bold bg-gray-800 text-white flex items-center gap-2">
-                                        Simulation Completed
+                        {/* Inputs Grid */}
+                        <div className="flex-grow grid grid-cols-3 md:grid-cols-6 gap-2 w-full md:w-auto">
+                            {stationsInput.map((station, idx) => (
+                                <div key={idx} className="bg-slate-50 p-2 rounded border border-slate-100 min-w-[100px]">
+                                    <div className="font-bold text-xs text-slate-700 mb-1 text-center">S{idx}</div>
+                                    <div className="flex gap-1">
+                                        <input
+                                            type="number"
+                                            placeholder="Wait"
+                                            className="w-full px-1 py-1 text-xs border rounded focus:ring-1 focus:ring-indigo-500"
+                                            value={station.waiting}
+                                            onChange={(e) => handleInputChange(idx, 'waiting', e.target.value)}
+                                            disabled={isSimulating}
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Drop"
+                                            className="w-full px-1 py-1 text-xs border rounded focus:ring-1 focus:ring-indigo-500"
+                                            value={station.drop}
+                                            onChange={(e) => handleInputChange(idx, 'drop', e.target.value)}
+                                            disabled={isSimulating}
+                                        />
                                     </div>
-                                )}
-
-                                {(isSimulating || isCompleted) && (
-                                    <button
-                                        onClick={resetSimulation}
-                                        className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                                    >
-                                        <RotateCcw size={14} /> Reset
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Input Grid */}
-                        <div className="grid grid-cols-6 gap-2">
-                            {stations.map((s, idx) => (
-                                <div key={s.id} className="bg-gray-50 p-2 rounded border border-gray-100">
-                                    <div className="font-bold text-center text-gray-700 mb-1">{s.id}</div>
-                                    <input
-                                        placeholder="Wait"
-                                        value={s.waiting}
-                                        onChange={(e) => handleChange(idx, 'waiting', e.target.value)}
-                                        disabled={isSimulating || isCompleted}
-                                        className="w-full text-xs p-1 mb-1 border rounded text-center text-gray-900 bg-white"
-                                    />
-                                    <input
-                                        placeholder="Drop"
-                                        value={s.drop}
-                                        onChange={(e) => handleChange(idx, 'drop', e.target.value)}
-                                        disabled={isSimulating || isCompleted}
-                                        className="w-full text-xs p-1 border rounded text-center text-gray-900 bg-white"
-                                    />
                                 </div>
                             ))}
                         </div>
-                    </div>
 
-                    {/* Data Structures Section */}
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-bold text-gray-800 border-b pb-2">Live Data Structures (Single Bus Mode)</h2>
-
-                        {/* 1. Linked List (Bus 1 Only) */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-gray-700">Passenger List (Linked List)</h3>
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Bus Capacity: 15</span>
-                            </div>
-                            <LinkedList
-                                key={1}
-                                busId={1}
-                                passengers={buses[1]?.passengers || []}
-                                active={true}
-                            />
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 shrink-0">
+                            {!isSimulating ? (
+                                <button
+                                    onClick={handleStart}
+                                    disabled={!isFormValid}
+                                    className={`px-6 py-2 rounded-lg transition flex items-center gap-2 font-medium ${isFormValid
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                        }`}
+                                >
+                                    <Play size={18} /> Start Simulation
+                                </button>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={nextStep}
+                                        disabled={isCompleted}
+                                        className={`px-6 py-2 rounded-lg font-medium transition flex items-center gap-2 ${isCompleted
+                                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                            : 'bg-green-600 text-white hover:bg-green-700'
+                                            }`}
+                                    >
+                                        <Play size={18} /> {isCompleted ? 'Finished' : 'Next Step'}
+                                    </button>
+                                    <button
+                                        onClick={handleReset}
+                                        className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition flex items-center gap-2"
+                                    >
+                                        <RotateCcw size={18} /> Reset
+                                    </button>
+                                </>
+                            )}
                         </div>
+                    </div>
+                </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* 2. Hash Map */}
-                            <HashMap stations={isSimulating || isCompleted ? simStations : []} />
+                <h2 className="text-xl font-bold text-slate-800 px-1">Live Data Structures (Single Bus Mode)</h2>
 
-                            {/* 3. Priority Queue */}
+                {/* 2. Main Dashboard Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+
+                    {/* Left Column (Data Structures) - Spans 6/12 */}
+                    <div className="lg:col-span-6 flex flex-col gap-4">
+
+                        {/* A. Linked List (Passengers) */}
+                        <LinkedList
+                            busId={1}
+                            passengers={buses[1]?.passengers || []}
+                            active={true}
+                        />
+
+                        {/* B. Grid for HashMap & Heap */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+                            {/* HashMap */}
+                            <HashMap stations={isSimulating || isCompleted ? stations : []} />
+
+                            {/* Heap */}
                             <PriorityQueue heap={isSimulating || isCompleted ? heap : []} />
                         </div>
 
-                        {/* 4. Queue (Bus 1 Route Only) */}
-                        <div className="pt-2 pb-20">
-                            <StationQueue
-                                key={1}
-                                busId={1}
-                                route={getBusRoute(1)}
-                                currentIdx={getCurrentStationIdx(1)}
-                            />
+                        {/* C. Route Info Panel (If Active) */}
+                        {isSimulating && selectedRoute && (
+                            <div className="bg-slate-900 text-white p-4 rounded-lg shadow-md border border-slate-700">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs uppercase tracking-wider text-slate-400">Selected Route</span>
+                                    <span className="font-bold text-indigo-400">{selectedRoute.name}</span>
+                                </div>
+                                <div className="text-sm font-mono mb-1">
+                                    Path: {selectedRoute.path.map(s => `S${s}`).join(' → ')}
+                                </div>
+                                <div className="text-xs text-slate-400">
+                                    Score: {selectedRoute.score} • Reason: {selectedRoute.reason}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column (Map & Queue) - Spans 6/12 */}
+                    <div className="lg:col-span-6 flex flex-col gap-4">
+
+                        {/* Map Container */}
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-grow h-[400px] flex flex-col">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="font-semibold flex items-center gap-2 text-slate-700">
+                                    <MapIcon className="w-5 h-5 text-indigo-600" />
+                                    Live City View
+                                </h2>
+                                <div className="text-sm font-mono text-slate-500">
+                                    Step: <span className="text-slate-900 font-bold">{currentStepIndex + 1}</span> / {totalSteps || '?'}
+                                </div>
+                            </div>
+
+                            <div className="relative flex-grow bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                                <CityMap
+                                    stations={stations}
+                                    activeRoute={selectedRoute ? selectedRoute.path : []}
+                                />
+                                <BusLayer buses={buses} />
+                            </div>
                         </div>
+
+                        {/* Route Queue (Linear Queue) */}
+                        <StationQueue
+                            busId={1}
+                            route={selectedRoute ? selectedRoute.path : []}
+                            currentIdx={getBusCurrentIndex(1)}
+                        />
                     </div>
                 </div>
-
-                {/* RIGHT PANEL (40%) - MAP */}
-                <div className="w-[40%] flex flex-col min-h-0 bg-white rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-gray-200/50">
-                        <h2 className="text-xs font-semibold text-gray-700 flex items-center gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                            Live City View
-                        </h2>
-                    </div>
-
-                    <CityMap />
-                    <BusLayer buses={buses} activeRoutes={[]} />
-                    {/* Note: activeRoutes highlighting disabled for step-mode to keep it clean, or can re-enable */}
-
-                    <div className="absolute bottom-4 right-4 z-10 bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-sm border border-gray-200/50 text-[10px]">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span className="text-gray-600">Bus 1 (Active)</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </main>
+            </main>
+        </div>
     );
 }
