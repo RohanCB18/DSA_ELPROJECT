@@ -1,13 +1,12 @@
 #include <stdio.h>
-#include <limits.h>
+#include <string.h>
 #include "simulation.h"
 #include "station.h"
 #include "bus.h"
 #include "events.h"
 
 #define STATIONS 6
-#define INF 9999
-#define CONGESTION_THRESHOLD 5
+#define BUS_CAPACITY 10
 
 int graph[STATIONS][STATIONS] = {
     {0, 15, 25, 0, 0, 0},
@@ -27,79 +26,125 @@ Station stations[STATIONS] = {
     {5, "S5", 0, 0}
 };
 
+typedef struct {
+    int id;
+    int path[STATIONS];
+    int len;
+    char name[10];
+} Route;
 
-int dijkstra(int src, int dest, int adj[STATIONS][STATIONS], int pathOut[]) {
-    int dist[STATIONS], prev[STATIONS], visited[STATIONS];
+Route routes[3] = {
+    {1, {0, 1, 3, 5}, 4, "R1"},
+    {2, {0, 2, 4, 5}, 4, "R2"},
+    {3, {0, 1, 2, 4, 5}, 5, "R3"}
+};
+
+typedef struct {
+    int id;
+    int waiting;
+} HeapNode;
+
+HeapNode heap[STATIONS];
+int heapSize = 0;
+
+void heap_swap(int i, int j) {
+    HeapNode temp = heap[i];
+    heap[i] = heap[j];
+    heap[j] = temp;
+}
+
+void heapify(int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < heapSize && heap[left].waiting > heap[largest].waiting)
+        largest = left;
+
+    if (right < heapSize && heap[right].waiting > heap[largest].waiting)
+        largest = right;
+
+    if (largest != i) {
+        heap_swap(i, largest);
+        heapify(largest);
+    }
+}
+
+void build_heap() {
+    heapSize = 0;
     for (int i = 0; i < STATIONS; i++) {
-        dist[i] = INF;
-        prev[i] = -1;
-        visited[i] = 0;
+        heap[heapSize].id = i;
+        heap[heapSize].waiting = stations[i].waiting;
+        heapSize++;
     }
-
-    dist[src] = 0;
-
-    for (int count = 0; count < STATIONS - 1; count++) {
-        int u = -1, min = INF;
-        for (int v = 0; v < STATIONS; v++) {
-            if (!visited[v] && dist[v] <= min) {
-                min = dist[v];
-                u = v;
-            }
-        }
-
-        if (u == -1 || u == dest) break;
-        visited[u] = 1;
-
-        for (int v = 0; v < STATIONS; v++) {
-            if (!visited[v] && adj[u][v] && dist[u] != INF && dist[u] + adj[u][v] < dist[v]) {
-                dist[v] = dist[u] + adj[u][v];
-                prev[v] = u;
-            }
-        }
+    for (int i = heapSize / 2 - 1; i >= 0; i--) {
+        heapify(i);
     }
+}
 
-    int tempPath[STATIONS], len = 0, curr = dest;
-    if (prev[curr] == -1 && src != dest) return 0;
-
-    while (curr != -1) {
-        tempPath[len++] = curr;
-        curr = prev[curr];
+int calculate_score(Route *r) {
+    int score = 0;
+    for (int i = 1; i < r->len - 1; i++) {
+        int sid = r->path[i];
+        score += stations[sid].waiting;
     }
-
-    for (int i = 0; i < len; i++) {
-        pathOut[i] = tempPath[len - 1 - i];
-    }
-    return len;
+    return score;
 }
 
 void start_simulation() {
     int i;
-    Bus bus1 = {1, {0}, 0, 0, 0, 1};    
+    Bus bus1;
+    memset(&bus1, 0, sizeof(Bus));
+    bus1.busId = 1;
+    bus1.active = 1;
     
     int step = 0;
     int maxSteps = 30;
     int b1_done;
     int sid;
-    Station *s;
-    int capacity_left;
-
-    // Initialize logic and get Inputs (Silent for frontend)
+    
     for (i = 0; i < STATIONS; i++) {
-        scanf("%d %d", &stations[i].waiting, &stations[i].drop);
+        if (scanf("%d %d", &stations[i].waiting, &stations[i].drop) != 2) {
+             stations[i].waiting = 0;
+             stations[i].drop = 0;
+        }
     }
 
-    bus1.routeLength = dijkstra(0, 5, graph, bus1.route);
+    int bestRouteIdx = 0;
+    int maxScore = -1;
+    
+    for (i = 0; i < 3; i++) {
+        int score = calculate_score(&routes[i]);
+        
+        if (score > maxScore) {
+            maxScore = score;
+            bestRouteIdx = i;
+        } else if (score == maxScore) {
+            if (routes[i].len < routes[bestRouteIdx].len) {
+                bestRouteIdx = i;
+            }
+        }
+    }
+
+    Route selected = routes[bestRouteIdx];
+    
+    bus1.routeLength = selected.len;
+    for(i=0; i<selected.len; i++) {
+        bus1.route[i] = selected.path[i];
+    }
+    bus1.currentIndex = 0;
+
+    printf("ROUTE_SELECTED ROUTE_ID=%d ROUTE_NAME=%s PATH=", selected.id, selected.name);
+    for(i=0; i<selected.len; i++) {
+        printf("S%d%s", selected.path[i], (i<selected.len-1)?",":"");
+    }
+    printf(" SCORE=%d REASON=MAX_INTERMEDIATE_DEMAND\n", maxScore);
+    
+    if (bus1.routeLength == 0) return;
 
     printf("\n--- SIMULATION START ---\n");
-    printf("Bus 1 Route (Scheduled): ");
-    for(i=0; i<bus1.routeLength; i++) printf("S%d ", bus1.route[i]); 
-    printf("(Len: %d)\n", bus1.routeLength);
 
-    if(bus1.routeLength == 0) { 
-        // Keep error output as it might be useful for debugging
-        printf("Error: Bus 1 has no path!\n"); 
-        return; 
-    }
+    int next_passenger_id = 101; 
 
     while (step < maxSteps) {
         b1_done = (bus1.currentIndex >= bus1.routeLength);
@@ -110,33 +155,39 @@ void start_simulation() {
 
         if (bus1.active && bus1.currentIndex < bus1.routeLength) {
             sid = bus1.route[bus1.currentIndex];
-            s = &stations[sid];
+            Station *s = &stations[sid];
 
-            // 1. DROP Logic
             int flow_drop = 0;
-            if (bus1.passengers > 0) {
-                if (bus1.currentIndex == bus1.routeLength - 1) {
-                    flow_drop = bus1.passengers; // Terminal: Everyone out
-                } else if (s->drop > 0) {
-                    flow_drop = (s->drop > bus1.passengers) ? bus1.passengers : s->drop;
-                }
-                bus1.passengers -= flow_drop;
-                if(s->drop > 0) s->drop -= flow_drop;
+            if (sid == 5) {
+                flow_drop = bus1.passengers;
+                bus1.passengers = 0;
+                // Clear IDs
+                for(int k=0; k<BUS_CAPACITY; k++) bus1.passengerIDs[k] = 0;
+                
+                s->drop -= flow_drop;
+                if(s->drop < 0) s->drop = 0;
             }
 
-            
             int flow_board = 0;
-            if (bus1.currentIndex < bus1.routeLength - 1) {
-                capacity_left = BUS_CAPACITY - bus1.passengers;
+            if (sid == 0) {
+                int capacity_left = BUS_CAPACITY - bus1.passengers;
                 if (capacity_left > 0 && s->waiting > 0) {
-                    flow_board = (s->waiting < capacity_left) ? s->waiting : capacity_left;
-                    bus1.passengers += flow_board;
-                    s->waiting -= flow_board;
+                     flow_board = (s->waiting < capacity_left) ? s->waiting : capacity_left;
+                     
+                     // Assign IDs to new passengers
+                     for(int k=0; k<flow_board; k++) {
+                        bus1.passengerIDs[bus1.passengers + k] = next_passenger_id++;
+                     }
+                     
+                     bus1.passengers += flow_board;
+                     s->waiting -= flow_board;
                 }
             }
 
-            // Log event after flow changes
-            emit_event(step, bus1.busId, s->name, s->waiting, bus1.passengers);
+            emit_event(step, bus1.busId, s->name, s->waiting, bus1.passengers, bus1.passengerIDs);
+            
+            build_heap();
+
             bus1.currentIndex++;
         }
 

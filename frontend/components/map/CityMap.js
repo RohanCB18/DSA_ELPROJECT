@@ -1,97 +1,97 @@
 import React from 'react';
 
-const CityMap = () => {
-    // Google Maps Style Constants
-    const COLORS = {
-        background: '#e5e7eb', // Google Maps neutral gray
-        road: '#ffffff',
-        roadBorder: '#d1d5db', // faint gray border for roads
-        terminal: '#ffffff',
-        hub: '#ffffff',
-        stop: '#ffffff',
-        label: '#374151',
+const CityMap = ({ stations = [], activeRoute = [] }) => {
+    const COORDS = {
+        0: { x: 10, y: 50, label: 'S0' },
+        1: { x: 35, y: 25, label: 'S1' },
+        2: { x: 35, y: 75, label: 'S2' },
+        3: { x: 65, y: 25, label: 'S3' },
+        4: { x: 65, y: 75, label: 'S4' },
+        5: { x: 90, y: 50, label: 'S5' },
     };
 
-    const stations = [
-        { id: 'S0', label: 'S0 Terminal', x: '10%', y: '50%', type: 'terminal' },
-        { id: 'S1', label: 'S1 Stop', x: '35%', y: '25%', type: 'stop' },
-        { id: 'S2', label: 'S2 Stop', x: '35%', y: '75%', type: 'stop' },
-        { id: 'S3', label: 'S3 Hub', x: '65%', y: '35%', type: 'hub' },
-        { id: 'S4', label: 'S4 Stop', x: '60%', y: '85%', type: 'stop' },
-        { id: 'S5', label: 'S5 Terminal', x: '90%', y: '50%', type: 'terminal' },
+    const SEGMENTS = [
+        { from: 0, to: 1 },
+        { from: 0, to: 2 },
+        { from: 1, to: 3 },
+        { from: 1, to: 2 },
+        { from: 2, to: 4 },
+        { from: 3, to: 5 },
+        { from: 4, to: 5 },
     ];
 
-    // SVG Map Drawing
-    return (
-        <div className="w-full h-full bg-[#ebebeb] relative select-none">
-            {/* Background Texture/Pattern could go here */}
+    const isActiveSegment = (from, to) => {
+        if (!activeRoute || activeRoute.length < 2) return false;
+        for (let i = 0; i < activeRoute.length - 1; i++) {
+            if (activeRoute[i] === from && activeRoute[i + 1] === to) return true;
+            if (activeRoute[i] === to && activeRoute[i + 1] === from) return true;
+        }
+        return false;
+    };
 
-            {/* Use viewBox="0 0 100 100" to allow using 0-100 coordinates that scale automatically */}
+    return (
+        <div className="w-full h-full bg-[#f3f4f6] relative select-none">
             <svg
                 className="absolute inset-0 w-full h-full pointer-events-none"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
             >
-                <defs>
-                    <filter id="road-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.1" />
-                    </filter>
-                </defs>
+                {SEGMENTS.map((seg, i) => (
+                    <line
+                        key={`base-${i}`}
+                        x1={COORDS[seg.from].x}
+                        y1={COORDS[seg.from].y}
+                        x2={COORDS[seg.to].x}
+                        y2={COORDS[seg.to].y}
+                        stroke="#d1d5db"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                    />
+                ))}
 
-                {/* Roads: White paths with gray strokes */}
-                <g stroke={COLORS.roadBorder} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M 10 50 L 35 25" />
-                    <path d="M 10 50 L 35 75" />
-                    <path d="M 35 25 L 65 35" />
-                    <path d="M 35 75 L 60 85" />
-                    <path d="M 60 85 L 65 35" />
-                    <path d="M 65 35 L 90 50" /> {/* Added S3->S5 */}
-                    {/* Cross connections */}
-                    <path d="M 35 25 L 35 75" />
-                </g>
-                <g stroke="#ffffff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M 10 50 L 35 25" />
-                    <path d="M 10 50 L 35 75" />
-                    <path d="M 35 25 L 65 35" />
-                    <path d="M 35 75 L 60 85" />
-                    <path d="M 60 85 L 65 35" />
-                    <path d="M 65 35 L 90 50" />
-                    <path d="M 35 25 L 35 75" />
-                </g>
+                {SEGMENTS.map((seg, i) => (
+                    isActiveSegment(seg.from, seg.to) && (
+                        <line
+                            key={`active-${i}`}
+                            x1={COORDS[seg.from].x}
+                            y1={COORDS[seg.from].y}
+                            x2={COORDS[seg.to].x}
+                            y2={COORDS[seg.to].y}
+                            stroke="#4f46e5"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            className="drop-shadow-sm transition-all duration-500"
+                        />
+                    )
+                ))}
+
+                {Object.entries(COORDS).map(([id, pos]) => {
+                    const isStationActive = activeRoute.includes(parseInt(id));
+                    return (
+                        <g key={id}>
+                            <circle
+                                cx={pos.x}
+                                cy={pos.y}
+                                r={isStationActive ? 3 : 2}
+                                fill={isStationActive ? "#ffffff" : "#f9fafb"}
+                                stroke={isStationActive ? "#4f46e5" : "#6b7280"}
+                                strokeWidth={isStationActive ? 1 : 0.5}
+                                className="transition-all duration-300"
+                            />
+                            <text
+                                x={pos.x}
+                                y={pos.y + 6}
+                                fontSize="3"
+                                textAnchor="middle"
+                                fill="#374151"
+                                className="font-mono font-bold"
+                            >
+                                {pos.label}
+                            </text>
+                        </g>
+                    );
+                })}
             </svg>
-
-            {/* Stations Markers */}
-            {stations.map((station) => (
-                <div
-                    key={station.id}
-                    className="absolute z-10 flex flex-col items-center group cursor-default"
-                    style={{
-                        left: station.x,
-                        top: station.y,
-                        transform: 'translate(-50%, -50%)',
-                    }}
-                >
-                    {/* Marker Pin */}
-                    <div className="relative flex items-center justify-center transition-transform hover:-translate-y-1">
-                        <div className={`
-                            w-4 h-4 rounded-full border-2 bg-white shadow-sm flex items-center justify-center
-                            ${station.type === 'terminal' ? 'border-gray-800' : ''}
-                            ${station.type === 'hub' ? 'border-blue-600' : ''}
-                            ${station.type === 'stop' ? 'border-gray-400' : ''}
-                        `}>
-                            {station.type === 'terminal' && <div className="w-1.5 h-1.5 bg-gray-800 rounded-full" />}
-                            {station.type === 'hub' && <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />}
-                        </div>
-                    </div>
-
-                    {/* Label */}
-                    <div className="absolute top-5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded shadow-sm border border-gray-100 whitespace-nowrap">
-                        <span className="text-[10px] font-medium text-gray-700 block leading-none">
-                            {station.label}
-                        </span>
-                    </div>
-                </div>
-            ))}
         </div>
     );
 };

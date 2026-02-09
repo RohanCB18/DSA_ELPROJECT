@@ -23,7 +23,7 @@ const LinkedList = ({ busId, passengers = [], active }) => {
                         <div key={`${busId}-p-${idx}`} className="flex items-center animate-in fade-in slide-in-from-left-4 duration-500">
                             <div className="flex flex-col items-center bg-gray-50 border-2 border-gray-300 rounded-md p-2 min-w-[60px]">
                                 <User size={16} className="text-gray-600 mb-1" />
-                                <span className="text-xs font-bold text-gray-800">P{idx + 1}</span>
+                                <span className="text-xs font-bold text-gray-800">{p.id}</span>
                                 {/* Dest removed */}
                             </div>
 
