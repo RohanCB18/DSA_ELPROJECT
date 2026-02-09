@@ -33,7 +33,7 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
                 {/* Horizontal Scrolling Container */}
                 <div
                     ref={scrollRef}
-                    className="flex items-center gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 px-4"
+                    className="flex items-center gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 px-4"
                 >
                     {route.map((stationId, idx) => {
                         const isVisited = idx < currentIdx;
@@ -44,7 +44,7 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
                             <div key={idx} className="flex items-center shrink-0">
                                 {/* Connector Line (Before) */}
                                 {idx > 0 && (
-                                    <div className={`w-6 h-0.5 mx-2 ${isVisited || isActive ? 'bg-blue-300' : 'bg-gray-200'}`} />
+                                    <div className={`w-10 h-0.5 mx-2 ${isVisited || isActive ? 'bg-blue-300' : 'bg-gray-200'}`} />
                                 )}
 
                                 <div className={`
@@ -55,7 +55,7 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
                                             ? 'bg-gray-50 border-gray-200 opacity-60 grayscale'
                                             : 'bg-white border-gray-200 opacity-80'
                                     }
-                                    ${isActive ? 'min-w-[80px]' : 'min-w-[60px]'}
+                                    ${isActive ? 'min-w-[90px]' : 'min-w-[70px]'}
                                 `}>
                                     {/* Status Icon */}
                                     <div className="mb-1">

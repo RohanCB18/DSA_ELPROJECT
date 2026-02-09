@@ -13,15 +13,13 @@ export async function POST(request) {
 
         const inputArgs = stations.map(s => `${s.waiting} ${s.drop}`).join(' ');
 
-        const backendPath = path.resolve(process.cwd(), '../backend/backend_sim');
+        const backendPath = path.resolve(process.cwd(), '..', 'backend', 'backend.exe');
 
-        // Convert Windows path to WSL path format
-        const wslPath = backendPath.replace(/\\/g, '/').replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`);
+        console.log(`Spawning backend: ${backendPath}`);
 
-        console.log(`Spawning backend via WSL: ${wslPath} with input: ${inputArgs}`);
-
-        // Spawn via WSL
-        const child = spawn('wsl', ['-d', 'Ubuntu', '--', wslPath]);
+        const child = spawn(backendPath, [], {
+            cwd: path.dirname(backendPath)
+        });
 
         child.stdin.write(inputArgs + '\n');
         child.stdin.end();

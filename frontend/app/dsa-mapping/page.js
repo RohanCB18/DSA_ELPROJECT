@@ -13,50 +13,50 @@ import {
 export default function DSAMappingPage() {
     const mappings = [
         {
-            title: 'Graph (Adjacency List)',
-            usedFor: 'City map representation',
-            why: 'Supports Dijkstra routing',
-            breaksWithout: 'No connectivity model',
+            title: 'Graph (Adjacency Matrix)',
+            usedFor: 'City map representation (Stations & Roads)',
+            why: 'Defines connectivity & valid paths',
+            breaksWithout: 'No movement possibilities',
             icon: <Network className="w-5 h-5 text-blue-600" />,
             color: 'from-blue-50 to-blue-100 border-blue-200'
         },
         {
-            title: 'Priority Queue / Heap',
-            usedFor: 'Congestion detection',
-            why: 'Identifies most congested station',
-            breaksWithout: 'Triggers Bus 3',
+            title: 'Max-Heap (Priority Queue)',
+            usedFor: 'Global Congestion Monitoring',
+            why: 'Instantly identifies station with max waiting',
+            breaksWithout: 'Slow O(N) search for critical stops',
             icon: <ListOrdered className="w-5 h-5 text-purple-600" />,
             color: 'from-purple-50 to-purple-100 border-purple-200'
         },
         {
-            title: 'Queue',
-            usedFor: 'Bus movement sequencing',
-            why: 'Event processing order',
-            breaksWithout: 'Chaotic bus stops',
+            title: 'Queue (Linear)',
+            usedFor: 'Bus Route Execution (S0 -> S1 -> ...)',
+            why: 'Enforces strict First-In-First-Out station order',
+            breaksWithout: 'Bus teleports or skips stops',
             icon: <GitCommitHorizontal className="w-5 h-5 text-green-600" />,
             color: 'from-green-50 to-green-100 border-green-200'
         },
         {
             title: 'Linked List',
-            usedFor: 'Passenger state inside a bus',
-            why: 'Dynamic add/remove operations',
-            breaksWithout: 'Fixed capacity only',
+            usedFor: 'Real-time Passenger Management',
+            why: 'O(1) updates for boarding/deboarding sequence',
+            breaksWithout: 'Fixed array limits, memory waste',
             icon: <GitBranch className="w-5 h-5 text-indigo-600" />,
             color: 'from-indigo-50 to-indigo-100 border-indigo-200'
         },
         {
             title: 'Hash Map',
-            usedFor: 'Station ID → Station metadata',
-            why: 'Fast lookup for events',
-            breaksWithout: 'Slow O(N) rendering',
+            usedFor: 'Station Data Retrieval (Wait/Drop)',
+            why: 'O(1) access to station state by ID',
+            breaksWithout: 'Inefficient lookups during rendering',
             icon: <Database className="w-5 h-5 text-orange-600" />,
             color: 'from-orange-50 to-orange-100 border-orange-200'
         },
         {
-            title: 'Dijkstra’s Algorithm',
-            usedFor: 'Shortest path computation',
-            why: 'Congestion-aware routing',
-            breaksWithout: 'Blind movement',
+            title: 'Greedy Scoring Algo',
+            usedFor: 'Dynamic Route Selection (R1/R2/R3)',
+            why: 'Maximizes passenger pickup efficiency',
+            breaksWithout: 'Bus picks suboptimal paths',
             icon: <ArrowRightLeft className="w-5 h-5 text-red-600" />,
             color: 'from-red-50 to-red-100 border-red-200'
         }
