@@ -15,7 +15,7 @@ const PriorityQueue = ({ heap = [] }) => {
                     <span>Waiting</span>
                 </div>
                 {heap.map((node, i) => (
-                    <div key={i} className={`
+                    <div key={node.id} className={`
                         flex justify-between items-center p-2 rounded text-xs transition-all duration-300
                         ${i === 0 ? 'bg-red-50 border-red-200 border' : 'bg-gray-50 border-gray-100 border'}
                     `}>

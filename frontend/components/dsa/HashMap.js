@@ -1,6 +1,6 @@
 import React from 'react';
 
-const HashMap = ({ stations }) => {
+const HashMap = ({ stations, highlightStationId }) => {
     return (
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 h-full">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
@@ -11,19 +11,24 @@ const HashMap = ({ stations }) => {
                     <span className="w-1/3">Key (ID)</span>
                     <span className="w-2/3">Value (Wait/Drop)</span>
                 </div>
-                {stations.map((s) => (
-                    <React.Fragment key={s.id}>
-                        <div className="bg-gray-50 p-2 rounded border border-gray-100 flex items-center justify-between transition-all duration-300 hover:bg-blue-50">
-                            <span className="text-blue-600 font-bold">"{s.name}"</span>
-                            <span className="text-gray-500">→</span>
-                        </div>
-                        <div className="bg-white p-2 rounded border border-gray-200 flex items-center gap-2 shadow-sm transition-all duration-300">
-                            <span className="text-purple-600 font-bold">
-                                {'{ w:'}<span className="text-red-500">{s.waiting}</span>, d:{s.drop} {'}'}
-                            </span>
-                        </div>
-                    </React.Fragment>
-                ))}
+                {stations.map((s) => {
+                    const isActive = s.id === highlightStationId;
+                    return (
+                        <React.Fragment key={s.id}>
+                            <div className={`p-2 rounded border flex items-center justify-between transition-all duration-300 ${isActive ? 'bg-blue-100 border-blue-300 scale-105' : 'bg-gray-50 border-gray-100 hover:bg-blue-50'
+                                }`}>
+                                <span className="text-blue-600 font-bold">"{s.name}"</span>
+                                <span className="text-gray-500">→</span>
+                            </div>
+                            <div className={`p-2 rounded border flex items-center gap-2 shadow-sm transition-all duration-300 ${isActive ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                                }`}>
+                                <span className="text-purple-600 font-bold">
+                                    {'{ w:'}<span className="text-red-500">{s.waiting}</span>, d:{s.drop} {'}'}
+                                </span>
+                            </div>
+                        </React.Fragment>
+                    );
+                })}
             </div>
         </div>
     );

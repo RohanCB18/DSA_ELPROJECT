@@ -35,7 +35,7 @@ export default function OperatorPage() {
         resetSimulation,
     } = useSimulation();
 
-    // Helper to get current index of bus 1 for Queue Viz
+
     const getBusCurrentIndex = (busId) => {
         if (!buses[busId] || !selectedRoute) return -1;
         return selectedRoute.path.indexOf(buses[busId].location);
@@ -77,11 +77,9 @@ export default function OperatorPage() {
 
             <main className="flex-grow container mx-auto px-4 py-4 space-y-4">
 
-                {/* 1. Top Control Panel: Inputs & Controls */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
 
-                        {/* Inputs Grid */}
                         <div className="flex-grow grid grid-cols-3 md:grid-cols-6 gap-2 w-full md:w-auto">
                             {stationsInput.map((station, idx) => (
                                 <div key={idx} className="bg-slate-50 p-2 rounded border border-slate-100 min-w-[100px]">
@@ -108,15 +106,14 @@ export default function OperatorPage() {
                             ))}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex gap-2 shrink-0">
                             {!isSimulating ? (
                                 <button
                                     onClick={handleStart}
                                     disabled={!isFormValid}
                                     className={`px-6 py-2 rounded-lg transition flex items-center gap-2 font-medium ${isFormValid
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
                                         }`}
                                 >
                                     <Play size={18} /> Start Simulation
@@ -147,29 +144,27 @@ export default function OperatorPage() {
 
                 <h2 className="text-xl font-bold text-slate-800 px-1">Live Data Structures (Single Bus Mode)</h2>
 
-                {/* 2. Main Dashboard Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
 
-                    {/* Left Column (Data Structures) - Spans 6/12 */}
                     <div className="lg:col-span-6 flex flex-col gap-4">
 
-                        {/* A. Linked List (Passengers) */}
                         <LinkedList
                             busId={1}
                             passengers={buses[1]?.passengers || []}
                             active={true}
                         />
 
-                        {/* B. Grid for HashMap & Heap */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
-                            {/* HashMap */}
-                            <HashMap stations={isSimulating || isCompleted ? stations : []} />
+                            <HashMap
+                                stations={isSimulating || isCompleted ? stations : []}
+                                highlightStationId={buses[1]?.location}
+                            />
 
-                            {/* Heap */}
-                            <PriorityQueue heap={isSimulating || isCompleted ? heap : []} />
+                            <PriorityQueue
+                                heap={isSimulating || isCompleted ? heap : []}
+                            />
                         </div>
 
-                        {/* C. Route Info Panel (If Active) */}
                         {isSimulating && selectedRoute && (
                             <div className="bg-slate-900 text-white p-4 rounded-lg shadow-md border border-slate-700">
                                 <div className="flex justify-between items-center mb-2">
@@ -186,10 +181,8 @@ export default function OperatorPage() {
                         )}
                     </div>
 
-                    {/* Right Column (Map & Queue) - Spans 6/12 */}
                     <div className="lg:col-span-6 flex flex-col gap-4">
 
-                        {/* Map Container */}
                         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-grow h-[400px] flex flex-col">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="font-semibold flex items-center gap-2 text-slate-700">
@@ -210,7 +203,6 @@ export default function OperatorPage() {
                             </div>
                         </div>
 
-                        {/* Route Queue (Linear Queue) */}
                         <StationQueue
                             busId={1}
                             route={selectedRoute ? selectedRoute.path : []}

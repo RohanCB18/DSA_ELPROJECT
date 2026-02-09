@@ -13,7 +13,6 @@ const LinkedList = ({ busId, passengers = [], active }) => {
             </h3>
 
             <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 min-h-[60px]">
-                {/* Head Node Indicator */}
                 <div className="text-xs text-gray-400 font-mono mr-2">HEAD</div>
 
                 {passengers.length === 0 ? (
@@ -24,10 +23,8 @@ const LinkedList = ({ busId, passengers = [], active }) => {
                             <div className="flex flex-col items-center bg-gray-50 border-2 border-gray-300 rounded-md p-2 min-w-[60px]">
                                 <User size={16} className="text-gray-600 mb-1" />
                                 <span className="text-xs font-bold text-gray-800">{p.id}</span>
-                                {/* Dest removed */}
                             </div>
 
-                            {/* Pointer Arrow */}
                             <div className="mx-2 text-gray-400">
                                 <ArrowRight size={16} />
                             </div>

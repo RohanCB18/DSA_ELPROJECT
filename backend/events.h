@@ -6,6 +6,7 @@ void emit_event(
     int busId,
     char *station,
     int waiting,
+    int drop,
     int onboard,
     int *passengerIDs
 );

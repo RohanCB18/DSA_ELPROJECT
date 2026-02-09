@@ -19,10 +19,8 @@ intelligent-transport-simulation/
 │   ├── main.c                  # Entry point
 │   ├── simulation.c            # Core simulation logic
 │   ├── simulation.h
-│   ├── bus.c                   # Bus data structures
-│   ├── bus.h
-│   ├── station.c               # Station data structures
-│   ├── station.h
+│   ├── bus.h                   # Bus data structures
+│   ├── station.h               # Station data structures
 │   ├── events.c                # Event emission for frontend
 │   ├── events.h
 │   └── backend_sim.exe         # Compiled executable
@@ -32,35 +30,33 @@ intelligent-transport-simulation/
 │   │   ├── page.js             # Landing page
 │   │   ├── operator/
 │   │   │   └── page.js         # Simulation control panel
-│   │   ├── dsa-mapping/
-│   │   │   └── page.js         # DSA concepts explanation
-│   │   ├── about/
-│   │   │   └── page.js         # Project information
 │   │   ├── api/
 │   │   │   └── simulation/
 │   │   │       └── route.js    # Backend API bridge
-│   │   ├── layout.js
-│   │   └── globals.css
 │   ├── components/
-│   │   ├── layout/
-│   │   │   ├── Navbar.js
-│   │   │   └── Footer.js
-│   │   └── map/
+│   │   ├── dsa/                # DSA Visualization Components
+│   │   │   ├── text-animation/ # Components for text effects
+│   │   │   ├── HashMap.js      # Station Data
+│   │   │   ├── LinkedList.js   # Passenger List
+│   │   │   ├── StationQueue.js # Route Queue
+│   │   │   └── heap.js         # Congestion Max-Heap
+│   │   ├── map/
 │   │       ├── CityMap.js      # SVG city visualization
 │   │       └── BusLayer.js     # Real-time bus overlay
 │   ├── hooks/
 │   │   └── useSimulation.js    # Simulation state management
-│   ├── lib/
-│   │   └── mapData.js          # Station coordinates & paths
-│   ├── public/
 │   ├── package.json
 │   └── next.config.mjs
 │
 ├── .gitignore
+├── system_architecture.md      # DETAILED System Documentation
 └── README.md
 ```
 
 ## 🔧 System Architecture
+
+> [!NOTE]
+> For a **"Detailed as F***"** deep dive into every file and function, please read the [System Architecture Document](./system_architecture.md).
 
 ### Backend (C)
 
@@ -123,7 +119,7 @@ Operator Input → API Route → Spawn backend_sim.exe → Stream stdout
 2. **Backend Setup**
    ```bash
    cd backend
-   gcc main.c simulation.c bus.c events.c station.c -o backend_sim.exe -std=c99
+   gcc main.c simulation.c events.c -o backend_sim.exe -std=c99
    ```
 
 3. **Frontend Setup**

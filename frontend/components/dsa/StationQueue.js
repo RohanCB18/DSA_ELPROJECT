@@ -30,7 +30,6 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
             </h3>
 
             <div className="relative">
-                {/* Horizontal Scrolling Container */}
                 <div
                     ref={scrollRef}
                     className="flex items-center gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 px-4"
@@ -42,7 +41,6 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
 
                         return (
                             <div key={idx} className="flex items-center shrink-0">
-                                {/* Connector Line (Before) */}
                                 {idx > 0 && (
                                     <div className={`w-10 h-0.5 mx-2 ${isVisited || isActive ? 'bg-blue-300' : 'bg-gray-200'}`} />
                                 )}
@@ -57,7 +55,6 @@ const StationQueue = ({ busId, route = [], currentIdx }) => {
                                     }
                                     ${isActive ? 'min-w-[90px]' : 'min-w-[70px]'}
                                 `}>
-                                    {/* Status Icon */}
                                     <div className="mb-1">
                                         {isVisited ? (
                                             <CheckCircle2 size={16} className="text-green-500" />

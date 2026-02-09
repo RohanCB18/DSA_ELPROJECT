@@ -6,7 +6,7 @@
 #include "events.h"
 
 #define STATIONS 6
-#define BUS_CAPACITY 10
+#define BUS_CAPACITY 100
 
 int graph[STATIONS][STATIONS] = {
     {0, 15, 25, 0, 0, 0},
@@ -145,7 +145,7 @@ void start_simulation() {
     printf("\n--- SIMULATION START ---\n");
 
     int next_passenger_id = 101; 
-
+    
     while (step < maxSteps) {
         b1_done = (bus1.currentIndex >= bus1.routeLength);
 
@@ -158,23 +158,26 @@ void start_simulation() {
             Station *s = &stations[sid];
 
             int flow_drop = 0;
-            if (sid == 5) {
-                flow_drop = bus1.passengers;
-                bus1.passengers = 0;
-                // Clear IDs
-                for(int k=0; k<BUS_CAPACITY; k++) bus1.passengerIDs[k] = 0;
-                
-                s->drop -= flow_drop;
-                if(s->drop < 0) s->drop = 0;
+            if (s->drop > 0 && bus1.passengers > 0) {
+                 flow_drop = (s->drop < bus1.passengers) ? s->drop : bus1.passengers;
+                 
+                 if (flow_drop < bus1.passengers) {
+                     memmove(bus1.passengerIDs, bus1.passengerIDs + flow_drop, (bus1.passengers - flow_drop) * sizeof(int));
+                 }
+                 for(int k = bus1.passengers - flow_drop; k < bus1.passengers; k++) {
+                     bus1.passengerIDs[k] = 0;
+                 }
+                 
+                 bus1.passengers -= flow_drop;
+                 s->drop -= flow_drop;
             }
 
             int flow_board = 0;
-            if (sid == 0) {
+            if (sid != 5) {
                 int capacity_left = BUS_CAPACITY - bus1.passengers;
                 if (capacity_left > 0 && s->waiting > 0) {
                      flow_board = (s->waiting < capacity_left) ? s->waiting : capacity_left;
                      
-                     // Assign IDs to new passengers
                      for(int k=0; k<flow_board; k++) {
                         bus1.passengerIDs[bus1.passengers + k] = next_passenger_id++;
                      }
@@ -184,7 +187,7 @@ void start_simulation() {
                 }
             }
 
-            emit_event(step, bus1.busId, s->name, s->waiting, bus1.passengers, bus1.passengerIDs);
+            emit_event(step, bus1.busId, s->name, s->waiting, s->drop, bus1.passengers, bus1.passengerIDs);
             
             build_heap();
 

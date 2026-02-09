@@ -1,9 +1,13 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 
 export function useSimulation() {
     const [buses, setBuses] = useState({});
     const [stations, setStations] = useState([]);
-    const [heap, setHeap] = useState([]);
+
+    const heap = useMemo(() => {
+        return [...stations].sort((a, b) => b.waiting - a.waiting);
+    }, [stations]);
+
     const [activeRoutes, setActiveRoutes] = useState([]);
     const [selectedRoute, setSelectedRoute] = useState(null);
 
@@ -11,6 +15,7 @@ export function useSimulation() {
     const [isCompleted, setIsCompleted] = useState(false);
 
     const [history, setHistory] = useState([]);
+
     const [currentStepIndex, setCurrentStepIndex] = useState(-1);
 
     const abortControllerRef = useRef(null);
@@ -25,7 +30,7 @@ export function useSimulation() {
             drop: parseInt(s.drop)
         }));
         setStations(initialStations);
-        setHeapFromStations(initialStations);
+
 
         abortControllerRef.current = new AbortController();
 
@@ -112,6 +117,7 @@ export function useSimulation() {
     };
 
     const nextStep = () => {
+        console.log("NextStep called. Current:", currentStepIndex, "History Length:", history.length);
         if (currentStepIndex >= history.length - 1) {
             setIsCompleted(true);
             setIsSimulating(false);
@@ -120,9 +126,14 @@ export function useSimulation() {
 
         const nextIdx = currentStepIndex + 1;
         const stepData = history[nextIdx];
+        console.log("Processing Step:", nextIdx, "Events:", stepData?.events?.length);
+
         setCurrentStepIndex(nextIdx);
 
-        if (!stepData) return;
+        if (!stepData) {
+            console.error("Missing step data for index:", nextIdx);
+            return;
+        }
 
         processEvents(stepData.events);
 
@@ -132,31 +143,25 @@ export function useSimulation() {
     };
 
     const processEvents = (events) => {
-        const newBuses = { ...buses };
-        let stationsUpdate = [...stations];
 
-        events.forEach(line => {
-            if (line.startsWith('EVENT')) {
-                const parts = {};
-                line.split(' ').slice(1).forEach(p => {
-                    const [k, v] = p.split('=');
-                    parts[k] = v;
-                });
+        setBuses(prevBuses => {
+            const newBuses = { ...prevBuses };
 
+            events.forEach(line => {
+                if (!line.startsWith('EVENT')) return;
+
+                const parts = parseEventLine(line);
                 const busId = parseInt(parts.BUS);
                 const stationName = parts.STATION;
                 const stationId = parseInt(stationName.replace('S', ''));
-                const waiting = parseInt(parts.DEMAND_SIGNAL);
                 const onBus = parseInt(parts.ONBUS);
 
-                // Parse real passenger IDs
                 let passengerList = [];
                 if (parts.PASSENGERS) {
                     passengerList = parts.PASSENGERS.split(',')
                         .filter(id => id.trim() !== '')
-                        .map(id => ({ id: `P${id}`, dest: 'S5' }));
+                        .map(id => ({ id: `P${id.trim()}`, dest: 'S5' }));
                 } else {
-                    // Fallback if empty or not present
                     passengerList = Array(onBus).fill({ id: '?', dest: 'S5' });
                 }
 
@@ -166,22 +171,41 @@ export function useSimulation() {
                     passengers: passengerList,
                     routePath: selectedRoute ? selectedRoute.path : []
                 };
-
-                const sIdx = stationsUpdate.findIndex(s => s.id === stationId);
-                if (sIdx !== -1) {
-                    stationsUpdate[sIdx] = { ...stationsUpdate[sIdx], waiting: waiting };
-                }
-            }
+            });
+            return newBuses;
         });
 
-        setBuses(newBuses);
-        setStations(stationsUpdate);
-        setHeapFromStations(stationsUpdate);
-    };
 
-    const setHeapFromStations = (currentStations) => {
-        const sorted = [...currentStations].sort((a, b) => b.waiting - a.waiting);
-        setHeap(sorted);
+        setStations(prevStations => {
+            if (!prevStations || !Array.isArray(prevStations)) {
+                console.error("Critical Error: prevStations is invalid", prevStations);
+                return [];
+            }
+
+            const stationsUpdate = [...prevStations];
+
+            events.forEach(line => {
+                if (!line.startsWith('EVENT')) return;
+
+                const parts = parseEventLine(line);
+                const stationName = parts.STATION;
+                const stationId = parseInt(stationName.replace('S', ''));
+                const waiting = parseInt(parts.DEMAND_SIGNAL);
+                const drop = parseInt(parts.DROP || '0');
+
+
+                if (stationsUpdate[stationId]) {
+                    stationsUpdate[stationId] = {
+                        ...stationsUpdate[stationId],
+                        waiting: waiting,
+                        drop: drop
+                    };
+                }
+            });
+            return stationsUpdate;
+        });
+
+
     };
 
     const getBusRoute = (busId) => {
@@ -198,7 +222,7 @@ export function useSimulation() {
         setIsSimulating(false);
         setIsCompleted(false);
         setActiveRoutes([]);
-        setHeap([]);
+
         setSelectedRoute(null);
     }, []);
 
@@ -217,3 +241,13 @@ export function useSimulation() {
         getBusRoute
     };
 }
+
+
+const parseEventLine = (line) => {
+    const parts = {};
+    line.split(' ').slice(1).forEach(p => {
+        const [k, v] = p.split('=');
+        parts[k] = v;
+    });
+    return parts;
+};
